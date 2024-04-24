@@ -183,7 +183,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['username']) && isset($
         if ($_POST["password"] == $row["password"]) {
             $_SESSION["username"] = $_POST["username"];
             $_SESSION["user_id"] = $row["id"]; // Set the user_id in session
-            echo "<script>alert('Tutor login successful!'); window.location.href='Tutordashboard.php';</script>";
+            echo "<script>alert('Tutor login successful!'); window.location.href='tutor_dashboard.php';</script>";
             exit();
         } else {
             echo "<script>alert('Incorrect Password!'); window.location.href='loginpage.php';</script>";
