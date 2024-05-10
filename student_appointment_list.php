@@ -26,10 +26,12 @@ $sql = "SELECT appointments.*, students.name AS student_name, tutors.name AS tut
         FROM appointments 
         LEFT JOIN students ON appointments.student_id = students.id 
         LEFT JOIN tutors ON appointments.tutor_id = tutors.id 
-        WHERE tutor_id = $id";
+        WHERE student_id = $id";
+
+
+
 
 $result = mysqli_query($data, $sql);
-
 
 // Check if appointments data is fetched successfully
 if ($result) {
@@ -44,6 +46,7 @@ if ($result) {
     // Handle query error
     echo "Error fetching appointments: " . mysqli_error($data);
 }
+
 
 
 
@@ -71,7 +74,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $start_from = ($page - 1) * $results_per_page;
 
 // Fetch tutors with pagination
-$sql = "SELECT * FROM appointments WHERE tutor_id = $id LIMIT $start_from, $results_per_page";
+$sql = "SELECT * FROM appointments WHERE student_id = $id LIMIT $start_from, $results_per_page";
 $result = mysqli_query($data, $sql);
 $courseworks = [];
 while ($row = mysqli_fetch_assoc($result)) {
@@ -79,7 +82,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 
 // Fetch total number of records for pagination
-$result_count = mysqli_query($data, "SELECT COUNT(*) AS total FROM appointments WHERE tutor_id = $id");
+$result_count = mysqli_query($data, "SELECT COUNT(*) AS total FROM appointments WHERE student_id = $id");
 $row = mysqli_fetch_assoc($result_count);
 $total_pages = ceil($row["total"] / $results_per_page);
 
@@ -312,13 +315,12 @@ $total_pages = ceil($row["total"] / $results_per_page);
                     <td><?php echo $appointment['appointment_type']; ?></td>
                     <td><?php echo $appointment['reason']; ?></td>
                     <td><?php echo $appointment['status']; ?></td>
-                    
                 </tr>
                 <?php
                 // Increment the row number
                 $row_number++;
-                ?>
-            <?php endforeach; ?>
+            endforeach; ?>
+            
         </tbody>
     </table>
     
