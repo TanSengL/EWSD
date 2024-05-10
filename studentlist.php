@@ -58,9 +58,17 @@ if (isset($_POST['delete'])) {
 function getTutorName($con, $tutorId) {
     $sql = "SELECT name FROM tutors WHERE id = $tutorId";
     $result = mysqli_query($con, $sql);
-    $row = mysqli_fetch_assoc($result);
-    return $row['name'];
+    
+    // Check if query was successful
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        return $row['name'];
+    } else {
+        // Return a default value or handle the case where no tutor is found
+        return "Not Assigned"; // You can customize this message as needed
+    }
 }
+
 ?>
 
 <!DOCTYPE html>
