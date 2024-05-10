@@ -22,7 +22,7 @@ $tutor_id = $_SESSION['user_id'];
 
 
 // Fetch the total number of coursework associated with the tutor's students
-$sql_total_courseworks = "SELECT COUNT(*) AS total_courseworks FROM coursework WHERE tutor_id IN (SELECT id FROM students WHERE assigned_tutor_id = $tutor_id)";
+$sql_total_courseworks = "SELECT COUNT(*) AS total_courseworks FROM coursework WHERE tutor_id IN (SELECT id FROM tutors WHERE assigned_student_id = $tutor_id)";
 
 $result_total_courseworks = mysqli_query($data, $sql_total_courseworks);
 $result_total_courseworks = mysqli_query($data, $sql_total_courseworks);
@@ -31,7 +31,7 @@ $total_courseworks = $row_total_courseworks['total_courseworks'];
 
 
 // Fetch the total number of appointments associated with the tutor's students
-$sql_total_appointments = "SELECT COUNT(*) AS total_appointments FROM appointments WHERE tutor_id IN (SELECT id FROM students WHERE assigned_tutor_id= $tutor_id)";
+$sql_total_appointments = "SELECT COUNT(*) AS total_appointments FROM appointments WHERE tutor_id IN (SELECT id FROM tutors WHERE assigned_student_id = $tutor_id)";
 $result_total_appointments = mysqli_query($data, $sql_total_appointments);
 $row_total_appointments = mysqli_fetch_assoc($result_total_appointments);
 $total_appointments = $row_total_appointments['total_appointments'];
