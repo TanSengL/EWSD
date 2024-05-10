@@ -34,7 +34,7 @@ while ($row = mysqli_fetch_assoc($result_notifications)) {
 }
 
 // Fetch student messages
-$stmt_student_messages = mysqli_prepare($data, "SELECT * FROM student_messages WHERE tutor_id=?");
+$stmt_student_messages = mysqli_prepare($data, "SELECT * FROM student_messages WHERE receiver_id=?");
 mysqli_stmt_bind_param($stmt_student_messages, "i", $id);
 mysqli_stmt_execute($stmt_student_messages);
 $result_student_messages = mysqli_stmt_get_result($stmt_student_messages);
@@ -238,23 +238,34 @@ if (isset($_POST['message'])) {
         <div class="div_deg">
             <!-- Display student messages -->
             <?php
-            if (count($student_messages) > 0) {
-                foreach ($student_messages as $message) {
-                    // Fetch the allocated tutor's name
-                    $tutor_id = $message['tutor_id'];
-                    $tutor_info_query = "SELECT * FROM tutors WHERE id = $tutor_id";
-                    $tutor_info_result = mysqli_query($data, $tutor_info_query);
-                    $tutor_info = mysqli_fetch_assoc($tutor_info_result);
+if (count($student_messages) > 0) {
+    foreach ($student_messages as $message) {
+        // Fetch the allocated tutor's name
+        $tutor_id = $message['tutor_id'];
+        $tutor_info_query = "SELECT * FROM tutors WHERE id = ?";
+        $stmt = mysqli_prepare($data, $tutor_info_query);
+        mysqli_stmt_bind_param($stmt, "i", $tutor_id);
+        mysqli_stmt_execute($stmt);
+        $tutor_info_result = mysqli_stmt_get_result($stmt);
 
-                    echo "<div class='student-message'>";
-                    echo "<p><strong>From:</strong> " . $tutor_info['name'] . "</p>";
-                    echo "<p><strong>Message:</strong> {$message['message_content']}</p>";
-                    echo "</div>";
-                }
-            } else {
-                echo "<p>No messages for students.</p>";
-            }
-            ?>
+        if ($tutor_info_result && mysqli_num_rows($tutor_info_result) > 0) {
+            $tutor_info = mysqli_fetch_assoc($tutor_info_result);
+            echo "<div class='student-message'>";
+            echo "<p><strong>From:</strong> " . $tutor_info['name'] . "</p>";
+            echo "<p><strong>Message:</strong> {$message['message_content']}</p>";
+            echo "</div>";
+        } else {
+            echo "<div class='student-message'>";
+            echo "<p><strong>From:</strong> Unknown Tutor</p>";
+            echo "<p><strong>Message:</strong> {$message['message_content']}</p>";
+            echo "</div>";
+        }
+    }
+} else {
+    echo "<p>No messages for students.</p>";
+}
+?>
+
         </div>
 
         <h1>Send Message to Your Tutor</h1>
