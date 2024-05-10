@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 $host = "localhost";
@@ -20,18 +21,15 @@ $id = $_SESSION['user_id'];
 
 $message = "";
 
-$sql = "SELECT * FROM tutors WHERE id = $id";
+$sql = "SELECT coursework.*, tutors.name AS tutor_name 
+        FROM coursework
+        LEFT JOIN tutors ON coursework.tutor_id = tutors.id 
+        WHERE tutors.assigned_student_id = $id";
 $result = mysqli_query($data, $sql);
-$info = mysqli_fetch_assoc($result);
-
-$sql = "SELECT coursework.*, tutors.name AS tutor_name FROM coursework INNER JOIN tutors ON coursework.tutor_id = tutors.id WHERE coursework.tutor_id = $id";
-$result = mysqli_query($data, $sql);
-$courseworks = [];
+$studentscourseworks = [];
 while ($row = mysqli_fetch_assoc($result)) {
-    $courseworks[] = $row;
+    $studentscourseworks[] = $row;
 }
-
-
 
 // Fetch notifications for the student
 $stmt_notifications = mysqli_prepare($data, "SELECT * FROM student_notification WHERE student_id=? AND seen = 0");
@@ -55,7 +53,10 @@ $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $start_from = ($page - 1) * $results_per_page;
 
 // Fetch tutors with pagination
-$sql = "SELECT coursework.*, tutors.name AS tutor_name FROM coursework INNER JOIN tutors ON coursework.tutor_id = tutors.id WHERE coursework.tutor_id = $id LIMIT $start_from, $results_per_page";
+$sql = "SELECT coursework.*, tutors.name AS tutor_name 
+FROM coursework
+LEFT JOIN tutors ON coursework.tutor_id = tutors.id 
+WHERE tutors.assigned_student_id = $id LIMIT $start_from, $results_per_page";
 $result = mysqli_query($data, $sql);
 $courseworks = [];
 while ($row = mysqli_fetch_assoc($result)) {
@@ -68,6 +69,8 @@ $row = mysqli_fetch_assoc($result_count);
 $total_pages = ceil($row["total"] / $results_per_page);
 
 
+
+
 ?>
 
 <!DOCTYPE html>
@@ -78,153 +81,129 @@ $total_pages = ceil($row["total"] / $results_per_page);
     <title>Student Dashboard</title>
     <style type="text/css">
         body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-}
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-header {
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-.navbar {
-    margin-right: 20px;
-}
+        .navbar {
+            margin-right: 20px;
+        }
 
-.navbar ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
+        .navbar ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
 
-.navbar ul li {
-    display: inline-block;
-    margin-left: 20px;
-}
+        .navbar ul li {
+            display: inline-block;
+            margin-left: 20px;
+        }
 
-.navbar ul li a {
-    text-decoration: none;
-    color: #fff;
-    font-weight: bold;
-}
+        .navbar ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+        }
 
-.navbar ul li a:hover {
-    text-decoration: underline;
-}
+        .navbar ul li a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
 
-h2 {
-    text-align: center;
-    color: #333333;
-    margin-bottom: 20px;
-}
+        h2 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 20px;
+        }
 
-.form-group {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-}
+        table {
+            width: 90%;
+            max-width: 1200px;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid #ddd;
+        }
 
-.form-group label {
-    flex: 0 0 150px;
-    font-weight: bold;
-    margin-right: 10px;
-    text-align: right;
-}
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
 
-.form-group input[type="text"],
-.form-group input[type="date"],
-.form-group input[type="file"] {
-    flex: 1;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    box-sizing: border-box;
-}
+        th {
+            background-color: #007bff;
+            color: white;
+        }
 
-button[type="submit"] {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
+        tr:hover {
+            background-color: #f5f5f5;
+        }
 
-button[type="submit"]:hover {
-    background-color: #0056b3;
-}
+        /* Pagination styles */
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
 
-.message {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 20px;
-    text-align: center;
-}
+        .pagination a {
+            display: inline-block;
+            padding: 10px;
+            margin-right: 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
 
-table {
-    width: 90%;
-    max-width: 1200px;
-    border-collapse: collapse;
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
-    border: 1px solid #ddd;
-}
+        .pagination a:hover {
+            background-color: #0056b3;
+        }
 
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
+        .pagination .active {
+            background-color: #0056b3;
+        }
 
-th {
-    background-color: #007bff;
-    color: white;
-}
+        /* Button styles */
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
 
-tr:hover {
-    background-color: #f5f5f5;
-}
+        .button:hover {
+            background-color: #0056b3;
+        }
 
-/* Pagination styles */
-.pagination {
-    margin-top: 20px;
-    text-align: center;
-}
+        .download-button {
+            background-color: #007bff;
+            color: white;
+        }
 
-.pagination a {
-    display: inline-block;
-    padding: 10px;
-    margin-right: 5px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.pagination a:hover {
-    background-color: #0056b3;
-}
-
-.pagination .active {
-    background-color: #0056b3;
-}
-
-
+        .download-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -280,11 +259,9 @@ tr:hover {
                     <td>
                         <form action="download.php" method="get">
                             <input type="hidden" name="id" value="<?=$coursework['id'];?>">
-                            <button type="submit" name="download">Download</button>
+                            <button type="submit" name="download" class="button download-button">Download</button>
                         </form>
                     </td>
-
-
                 </tr>
                 <?php
                 // Increment the row number
@@ -303,7 +280,7 @@ tr:hover {
 </div>
 
 <script>
-        function logout() {
+    function logout() {
         if (confirm('Are you sure you want to logout?')) {
             document.getElementById('logoutForm').submit();
         }
