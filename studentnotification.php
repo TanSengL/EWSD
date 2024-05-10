@@ -38,8 +38,6 @@ $update_sql = "UPDATE student_notification SET seen = 1 WHERE student_id = ?";
 $update_stmt = mysqli_prepare($data, $update_sql);
 mysqli_stmt_bind_param($update_stmt, "i", $id);
 mysqli_stmt_execute($update_stmt);
-
-
 ?>
 
 <!DOCTYPE html>
@@ -179,17 +177,17 @@ mysqli_stmt_execute($update_stmt);
     <center>
         <h1>Notifications</h1>
         <div class="div_deg">
-    <?php if (count($notifications) > 0): ?>
-        <div class="notifications">
-            <h3>You have <?php echo count($notifications); ?> new notification<?php echo count($notifications) > 1 ? 's' : ''; ?>:</h3>
-            <?php foreach ($notifications as $notification): ?>
-                <p><?php echo $notification['message']; ?></p>
-            <?php endforeach; ?>
+            <?php if (count($notifications) > 0): ?>
+                <div class="notifications">
+                    <h3>You have <?php echo count($notifications); ?> new notification<?php echo count($notifications) > 1 ? 's' : ''; ?>:</h3>
+                    <?php foreach ($notifications as $notification): ?>
+                        <p><?php echo $notification['message']; ?></p>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p>No new notifications.</p>
+            <?php endif; ?>
         </div>
-    <?php else: ?>
-        <p>No new notifications.</p>
-    <?php endif; ?>
-</div>
         <!-- Your existing student dashboard content here -->
     </center>
 </div>
