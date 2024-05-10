@@ -20,15 +20,17 @@ $id = $_SESSION['user_id'];
 
 $message = "";
 
-// Fetch coursework data for the student with student names
-$sql = "SELECT studentscourseworks.*, students.name AS student_name FROM studentscourseworks 
+// Fetch coursework data for the students assigned to the tutor
+$sql = "SELECT studentscourseworks.*, students.name AS student_name 
+        FROM studentscourseworks 
         LEFT JOIN students ON studentscourseworks.student_id = students.id 
-        WHERE student_id = $id";
+        WHERE students.assigned_tutor_id = $id";
 $result = mysqli_query($data, $sql);
 $studentscourseworks = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $studentscourseworks[] = $row;
 }
+
 
 // Fetch notifications for the tutor
 $stmt_notifications = mysqli_prepare($data, "SELECT * FROM tutor_notification WHERE tutor_id=? AND seen = 0");
@@ -55,31 +57,28 @@ $start_from = ($page - 1) * $results_per_page;
 $sql = "SELECT studentscourseworks.*, students.name AS student_name FROM studentscourseworks 
         LEFT JOIN students ON studentscourseworks.student_id = students.id 
         WHERE student_id = $id LIMIT $start_from, $results_per_page";
+
+
 $result = mysqli_query($data, $sql);
-$studentscourseworks = [];
-while ($row = mysqli_fetch_assoc($result)) {
-    $studentscourseworks[] = $row;
+
+if (!$result) {
+    // If there's an error in the SQL query, print the error message
+    $message = "Error: " . mysqli_error($data);
+} else {
+    // Fetch coursework data
+    while ($row = mysqli_fetch_assoc($result)) {
+        $studentscourseworks[] = $row;
+    }
 }
+
+
 
 // Fetch total number of records for pagination
 $result_count = mysqli_query($data, "SELECT COUNT(*) AS total FROM studentscourseworks WHERE student_id = $id");
 $row = mysqli_fetch_assoc($result_count);
 $total_pages = ceil($row["total"] / $results_per_page);
 
-// Delete coursework data
-if (isset($_POST['delete'])) {
-    $id = $_POST['id'];
-    $sql = "DELETE FROM studentscourseworks WHERE id = ?";
-    $stmt = mysqli_prepare($data, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    
-    if (mysqli_stmt_execute($stmt)) {
-        header("Location: tutor_coursework.php?page=$page");
-        exit();
-    } else {
-        $message = "Error: " . mysqli_error($data);
-    }
-}
+
 
 
 //Download File
