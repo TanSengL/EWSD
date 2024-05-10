@@ -34,7 +34,7 @@ while ($row = mysqli_fetch_assoc($result_notifications)) {
 }
 
 // Fetch tutor messages
-$stmt_tutor_messages = mysqli_prepare($data, "SELECT * FROM tutor_messages WHERE student_id=?");
+$stmt_tutor_messages = mysqli_prepare($data, "SELECT * FROM tutor_messages WHERE receiver_id=?");
 mysqli_stmt_bind_param($stmt_tutor_messages, "i", $id);
 mysqli_stmt_execute($stmt_tutor_messages);
 $result_tutor_messages = mysqli_stmt_get_result($stmt_tutor_messages);
@@ -50,19 +50,19 @@ if (isset($_POST['message'])) {
     $message_content = $_POST['message'];
 
     // Retrieve allocated tutor ID from the students table
-    $sql = "SELECT assigned_tutor_id FROM students WHERE id = ?";
+    $sql = "SELECT assigned_student_id FROM tutors WHERE id = ?";
     $stmt = mysqli_prepare($data, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $student_id);
+    mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $allocated_tutor_id);
+    mysqli_stmt_bind_result($stmt, $allocated_student_id);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
 
-    if ($allocated_tutor_id) {
+    if ($allocated_student_id) {
         // Insert the message into the student_messages table
         $insert_query = "INSERT INTO student_messages (sender_id, receiver_id, message_content, tutor_id) VALUES (?, ?, ?, ?)";
         $insert_stmt = mysqli_prepare($data, $insert_query);
-        mysqli_stmt_bind_param($insert_stmt, "iisi", $student_id, $allocated_tutor_id, $message_content, $allocated_tutor_id);
+        mysqli_stmt_bind_param($insert_stmt, "iisi", $student_id, $allocated_student_id, $message_content, $id);
 
         if (mysqli_stmt_execute($insert_stmt)) {
             echo "Message sent successfully!";
@@ -73,7 +73,7 @@ if (isset($_POST['message'])) {
         }
         mysqli_stmt_close($insert_stmt);
     } else {
-        echo "Error: Tutor ID not found for the student.";
+        echo "Error: Student ID not found for the tutor.";
     }
 }
 
@@ -235,7 +235,7 @@ if (isset($_POST['message'])) {
                 <?php foreach ($tutor_messages as $message): ?>
                     <?php
                     // Fetch the allocated student's name
-                    $student_id = $message['student_id'];
+                    $student_id = $message['sender_id'];
                     $student_info_query = "SELECT * FROM students WHERE id = $student_id";
                     $student_info_result = mysqli_query($data, $student_info_query);
                     $student_info = mysqli_fetch_assoc($student_info_result);
@@ -246,7 +246,7 @@ if (isset($_POST['message'])) {
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <p>No messages from tutors.</p>
+                <p>No messages from students.</p>
             <?php endif; ?>
         </div>
 
@@ -264,9 +264,6 @@ if (isset($_POST['message'])) {
     </center>
 </div>
 
-
-
-
 <script>
     function logout() {
         if (confirm('Are you sure you want to logout?')) {
@@ -277,5 +274,3 @@ if (isset($_POST['message'])) {
 
 </body>
 </html>
-
-
